@@ -33,9 +33,7 @@ class _PreviewPageState extends State<PreviewPage> {
                 const SizedBox(height: 14),
                 ElevatedButton(
                   onPressed: () {
-                   // print(updateImage(widget.picture));
-                    Upload(widget.picture);
-                   // uploadThePhotoAndGetTheResponse();
+                   uploadThePhotoAndGetTheResponse(widget.picture);
                   },
                   child: const Text('Upload'),
                 ),
@@ -73,7 +71,7 @@ class _PreviewPageState extends State<PreviewPage> {
     );
   }
 
-  uploadThePhotoAndGetTheResponse() async {
+  uploadThePhotoAndGetTheResponse(XFile imageFile) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -98,12 +96,16 @@ class _PreviewPageState extends State<PreviewPage> {
 
     var client = http.Client();
     try {
-      var response = await client
-          .post(Uri.https('apim-ai-o.azure-api.net', 'aiotest'), headers: {
-        'Ocp-Apim-Subscription-Key': '59a541745fab4d29b0197d98cb733def'
-      });
+      var uri = Uri.https('ingredientsmagicjava.azurewebsites.net', '/api/fileSystemUpload');//Uri.https('apim-ai-o.azure-api.net', '/v1/aiodata');
+      var request = http.MultipartRequest('POST', uri)
+        ..headers['Ocp-Apim-Subscription-Key'] = '59a541745fab4d29b0197d98cb733def'
+        ..files.add(await http.MultipartFile.fromPath(
+          imageFile.name, imageFile.path,
+          // contentType: MediaType('png', 'x-tar'),
+        ));
+      var response = await request.send();
       ResponseData decodedResponse =
-          ResponseData.fromJson(jsonDecode(response.body));
+          ResponseData.fromJson(jsonDecode(response.toString()));
       Navigator.pop(context);
       setState(() {
         responseData = decodedResponse;
@@ -133,39 +135,5 @@ class _PreviewPageState extends State<PreviewPage> {
   }
 
 
-  Future<bool> updateImage(XFile imageFile) async{
-    const String url =
-        'https://apim-ai-o.azure-api.net/v1/aiodata';
 
-    var request = http.MultipartRequest('POST', Uri.parse(url));
-    request.headers['Ocp-Apim-Subscription-Key'] = '59a541745fab4d29b0197d98cb733def';
-
-    request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
-    var res = await request.send();
-    final respStr = await res.stream.bytesToString();
-    print('responseBody: ${res}' );
-    if(res.statusCode==200){
-      return true;
-    } else {
-      print(respStr);
-      print('Failed');
-      return false;
-    }
-  }
-
-
-
-  Upload(XFile imageFile) async {
-
-    var uri = Uri.https('ingredientsmagicjava.azurewebsites.net', '/api/fileSystemUpload');//Uri.https('apim-ai-o.azure-api.net', '/v1/aiodata');
-    var request = http.MultipartRequest('POST', uri)
-    ..headers['Ocp-Apim-Subscription-Key'] = '59a541745fab4d29b0197d98cb733def'
-      ..files.add(await http.MultipartFile.fromPath(
-        imageFile.name, imageFile.path,
-          // contentType: MediaType('png', 'x-tar'),
-      ));
-    var response = await request.send();
-
-    if (response.statusCode == 200) print('Uploaded!');
-  }
 }
